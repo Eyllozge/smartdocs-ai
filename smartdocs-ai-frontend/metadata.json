@@ -1,0 +1,6 @@
+{
+  "name": "SmartDocs AI",
+  "description": "FastAPI RAG Backend'ine bağlanan PDF yükleme, doküman yönetimi ve akıllı soru-cevap istemcisi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
