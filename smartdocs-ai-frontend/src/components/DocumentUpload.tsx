@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2, Sparkles, X } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
 import { api, getStoredToken } from '../api/client';
 import { DocumentItem } from '../types';
 
@@ -69,21 +69,23 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }
 
     setUploadStatus('uploading');
-    setStatusMessage('PDF yükleniyor ve backend tarafından parçalanıyor (chunking & embedding)...');
+    setStatusMessage('Belge yükleniyor ve metin indekslemesi yapılıyor...');
 
     try {
-      // POST /documents/upload multipart with "file"
       const result = await api.uploadDocument(selectedFile);
       setUploadStatus('success');
       setUploadedResult(result);
       const chunkMsg = result.chunk_count !== undefined 
-        ? `${result.chunk_count} parça (chunk) başarıyla oluşturuldu.`
-        : 'Doküman başarıyla işlendi.';
+        ? `${result.chunk_count} parça indekslendi.`
+        : 'Doküman analize hazırlandı.';
       setStatusMessage(chunkMsg);
       onUploadSuccess(result);
     } catch (err: unknown) {
       setUploadStatus('error');
-      const msg = err instanceof Error ? err.message : 'Yükleme başarısız oldu.';
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'Şu anda servislerimizdeki yoğunluk nedeniyle hizmet verilemiyor. Lütfen daha sonra tekrar deneyin.';
       setStatusMessage(msg);
     }
   };
@@ -107,16 +109,16 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
             <UploadCloud className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">PDF Dokümanı Yükle</h3>
-            <p className="text-[11px] text-slate-500">
-              FastAPI <code className="bg-slate-100 px-1 py-0.2 rounded font-mono">/documents/upload</code> endpointine aktarılır
+            <h3 className="text-sm font-bold text-slate-900">Belge Yükle</h3>
+            <p className="text-xs text-slate-500">
+              Analiz edilecek PDF dosyasını seçin
             </p>
           </div>
         </div>
@@ -135,8 +137,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         }}
         className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center transition cursor-pointer ${
           isDragging
-            ? 'border-indigo-500 bg-indigo-50/60 ring-4 ring-indigo-50'
-            : 'border-slate-300 bg-slate-50/50 hover:border-indigo-400 hover:bg-slate-50'
+            ? 'border-slate-800 bg-slate-100 ring-2 ring-slate-300'
+            : 'border-slate-300 bg-slate-50/70 hover:border-slate-400 hover:bg-slate-50'
         }`}
       >
         <input
@@ -148,24 +150,24 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           id="file-input-pdf"
         />
 
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 mb-3 text-indigo-600">
-          <UploadCloud className="h-6 w-6" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xs border border-slate-200 mb-2.5 text-slate-700">
+          <FileText className="h-5 w-5" />
         </div>
 
-        <p className="text-sm font-semibold text-slate-800">
-          PDF dosyasını buraya sürükleyin veya <span className="text-indigo-600 underline">seçin</span>
+        <p className="text-xs font-semibold text-slate-800">
+          PDF dosyasını buraya sürükleyin veya <span className="text-slate-900 underline font-bold">seçin</span>
         </p>
-        <p className="text-xs text-slate-400 mt-1">
-          Sadece .pdf formatındaki belgeler desteklenir
+        <p className="text-[11px] text-slate-500 mt-1">
+          Maksimum dosya boyutu: 50MB (.pdf)
         </p>
       </div>
 
       {/* Selected File Card & Actions */}
       {selectedFile && (
-        <div className="mt-3.5 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+        <div className="mt-3.5 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-600 font-bold text-xs">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white font-semibold text-[11px]">
                 PDF
               </div>
               <div className="min-w-0">
@@ -182,7 +184,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
                 title="Dosyayı kaldır"
               >
                 <X className="h-4 w-4" />
@@ -198,18 +200,15 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 type="button"
                 onClick={handleUpload}
                 disabled={uploadStatus === 'uploading'}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 active:bg-black transition disabled:opacity-60"
               >
                 {uploadStatus === 'uploading' ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Yükleniyor ve Parçalanıyor...</span>
+                    <span>Yükleniyor ve İndeksleniyor...</span>
                   </>
                 ) : (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Dokümanı Backend'e Yükle</span>
-                  </>
+                  <span>Dokümanı Yükle ve Analiz Et</span>
                 )}
               </button>
             </div>
@@ -219,38 +218,29 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       {/* Uploading Progress State */}
       {uploadStatus === 'uploading' && (
-        <div className="mt-3 rounded-xl bg-indigo-50 p-3 border border-indigo-100 animate-pulse">
-          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-900">
-            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-            <span>İşlem Devam Ediyor</span>
+        <div className="mt-3 rounded-xl bg-slate-100 p-3 border border-slate-200">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+            <Loader2 className="h-4 w-4 animate-spin text-slate-700" />
+            <span>İşleniyor</span>
           </div>
-          <p className="text-[11px] text-indigo-700 mt-1">{statusMessage}</p>
+          <p className="text-[11px] text-slate-600 mt-1">{statusMessage}</p>
         </div>
       )}
 
       {/* Success Notification */}
       {uploadStatus === 'success' && (
-        <div className="mt-3 rounded-xl bg-emerald-50 p-3.5 border border-emerald-200">
-          <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
+        <div className="mt-3 rounded-xl bg-emerald-50 p-3 border border-emerald-200">
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-900">
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>Doküman Başarıyla Yüklendi!</span>
+            <span>Belge Başarıyla Yüklendi</span>
           </div>
           <p className="text-[11px] text-emerald-700 mt-1">{statusMessage}</p>
-          {uploadedResult && (
-            <div className="mt-2 flex items-center gap-2 text-[11px] text-emerald-800 font-mono bg-white/70 p-2 rounded-lg border border-emerald-100">
-              <span>ID: <b>{uploadedResult.id}</b></span>
-              {uploadedResult.chunk_count !== undefined && (
-                <span>• Parçalar: <b>{uploadedResult.chunk_count}</b></span>
-              )}
-              <span>• Durum: <b>{uploadedResult.status}</b></span>
-            </div>
-          )}
           <button
             type="button"
             onClick={handleClear}
             className="mt-2 text-[11px] font-semibold text-emerald-800 hover:underline"
           >
-            + Yeni bir PDF yükle
+            + Başka bir belge yükle
           </button>
         </div>
       )}
@@ -260,7 +250,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         <div className="mt-3 rounded-xl bg-rose-50 p-3 border border-rose-200">
           <div className="flex items-center gap-2 text-xs font-semibold text-rose-900">
             <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-            <span>Yükleme Hatası</span>
+            <span>İşlem Başarısız</span>
           </div>
           <p className="text-[11px] text-rose-700 mt-1">{statusMessage}</p>
         </div>

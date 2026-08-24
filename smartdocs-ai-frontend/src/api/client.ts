@@ -142,9 +142,12 @@ async function request<T>(
 
     return (await response.json()) as T;
   } catch (error: unknown) {
-    if (error instanceof TypeError && error.message.includes('fetch')) {
+    if (
+      (error instanceof TypeError && error.message.toLowerCase().includes('fetch')) ||
+      (error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('Network request failed')))
+    ) {
       throw new Error(
-        `Backend'e (${baseUrl}) bağlanılamadı. FastAPI sunucusunun çalıştığından ve CORS ayarlarının yapıldığından emin olun.`
+        'Şu anda servislerimizdeki yoğunluk nedeniyle hizmet verilemiyor. Lütfen daha sonra tekrar deneyin.'
       );
     }
     throw error;

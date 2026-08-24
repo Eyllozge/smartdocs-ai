@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, BookOpen, Layers, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Copy, Check, MessageSquare, Trash2, ArrowRight } from 'lucide-react';
+import { Send, Bot, User, BookOpen, Layers, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Copy, Check, Trash2, ArrowRight } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { DocumentItem, ChatMessage, SourceReference } from '../types';
 import { api, getStoredToken } from '../api/client';
@@ -37,7 +37,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Load / reset messages when selected document changes
   useEffect(() => {
     if (selectedDoc) {
-      // Check if there is saved chat in sessionStorage for this doc
       const saved = sessionStorage.getItem(`chat_${selectedDoc.id}`);
       if (saved) {
         try {
@@ -51,7 +50,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {
           id: 'welcome',
           sender: 'assistant',
-          text: `Merhaba! **"${selectedDoc.filename}"** dokümanı hazır. Dokümanın içeriği hakkında dilediğiniz soruyu sorabilirsiniz.`,
+          text: `**"${selectedDoc.filename}"** belgesi incelenmeye hazır. Bu belge hakkında merak ettiğiniz konuları sorabilirsiniz.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -60,7 +59,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [selectedDoc?.id]);
 
-  // Save messages to sessionStorage
   const updateMessages = (newMessages: ChatMessage[]) => {
     setMessages(newMessages);
     if (selectedDoc) {
@@ -92,7 +90,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setIsLoading(true);
 
     try {
-      // POST /chat -> { document_id, question } -> { answer, sources }
       const res = await api.sendChatMessage(selectedDoc.id, question);
       
       const assistantText = res.answer || res.response || (typeof res === 'string' ? res : 'Yanıt alındı.');
@@ -108,11 +105,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       updateMessages([...nextMessages, botMessage]);
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Yanıt alınamadı.';
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Şu anda servislerimizdeki yoğunluk nedeniyle hizmet verilemiyor. Lütfen daha sonra tekrar deneyin.';
       const errorMessage: ChatMessage = {
         id: `err_${Date.now()}`,
         sender: 'assistant',
-        text: `Hata: ${errorMsg}`,
+        text: errorMsg,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isError: true,
       };
@@ -149,7 +149,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {
           id: 'welcome',
           sender: 'assistant',
-          text: `Sohbet geçmişi temizlendi. **"${selectedDoc.filename}"** hakkında soru sorabilirsiniz.`,
+          text: `Sohbet geçmişi sıfırlandı. **"${selectedDoc.filename}"** hakkında yeni bir soru sorabilirsiniz.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -157,19 +157,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const samplePrompts = [
-    'Dokümanın ana fikrini ve amacını 3 maddede özetle.',
-    'Dokümandaki en kritik bulgular veya sonuçlar nelerdir?',
-    'Öne çıkan sayısal veriler ve tarihler neler?',
-    'Bu belgede bahsedilen temel terimleri açıkla.',
+    'Belgenin ana konusunu ve amacını özetle.',
+    'Belgede geçen en önemli maddeler ve bulgular neler?',
+    'Önemli tarihler, sayılar ve yükümlülükler nelerdir?',
+    'Bu belgedeki temel şartları listele.',
   ];
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3.5">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-sm shadow-indigo-100">
-            <Bot className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-xs">
+            <Bot className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             {selectedDoc ? (
@@ -178,20 +178,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   {selectedDoc.filename}
                 </span>
                 {selectedDoc.chunk_count !== undefined && (
-                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
-                    <Layers className="h-3 w-3" />
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                    <Layers className="h-3 w-3 text-slate-500" />
                     {selectedDoc.chunk_count} parça
                   </span>
                 )}
               </div>
             ) : (
-              <h3 className="text-xs font-bold text-slate-700">Doküman Seçilmedi</h3>
+              <h3 className="text-xs font-bold text-slate-700">Belge Seçilmedi</h3>
             )}
-            <p className="text-[11px] text-slate-500 flex items-center gap-1">
-              <span className="font-mono">POST /chat</span>
-              {selectedDoc && (
-                <span>• ID: <b className="font-mono text-slate-700">{selectedDoc.id}</b></span>
-              )}
+            <p className="text-[11px] text-slate-500">
+              {selectedDoc ? 'Belge Analizi ve Soru-Cevap' : 'Lütfen sol menüden bir doküman seçin'}
             </p>
           </div>
         </div>
@@ -202,7 +199,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               id="btn-clear-chat"
               onClick={handleClearHistory}
               title="Sohbet geçmişini temizle"
-              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Temizle</span>
@@ -211,31 +208,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           {!selectedDoc && (
             <button
               onClick={onOpenDocList}
-              className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+              className="flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition"
             >
               <BookOpen className="h-3.5 w-3.5" />
-              <span>Doküman Seç</span>
+              <span>Belge Seç</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Messages Thread */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/40">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/50">
         {!selectedDoc ? (
           <div className="flex h-full flex-col items-center justify-center text-center p-8">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 mb-3 shadow-inner">
-              <BookOpen className="h-8 w-8" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600 mb-3 border border-slate-200">
+              <BookOpen className="h-6 w-6" />
             </div>
-            <h4 className="text-base font-bold text-slate-900">Sohbet İçin Bir Doküman Seçin</h4>
-            <p className="mt-1 text-xs text-slate-500 max-w-sm">
-              Soru sormak ve RAG ile yanıt alabilmek için sol panelden bir PDF dokümanı seçin veya yeni bir PDF yükleyin.
+            <h4 className="text-sm font-bold text-slate-900">Analiz İçin Belge Seçin</h4>
+            <p className="mt-1 text-xs text-slate-500 max-w-sm leading-relaxed">
+              Sorularınızı sormak ve doğrulanmış yanıtlar almak için listeden bir PDF belgesi seçin veya yeni bir belge yükleyin.
             </p>
             <button
               onClick={onOpenDocList}
-              className="mt-4 flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+              className="mt-4 flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition"
             >
-              <span>Doküman Listesine Git</span>
+              <span>Belgeleri Görüntüle</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -256,44 +253,44 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 >
                   {/* Avatar */}
                   <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-xs text-xs font-bold ${
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold shadow-2xs ${
                       isUser
                         ? 'bg-slate-900 text-white'
                         : isError
-                        ? 'bg-rose-100 text-rose-600'
-                        : 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white'
+                        ? 'bg-rose-100 text-rose-700'
+                        : 'bg-slate-800 text-white'
                     }`}
                   >
-                    {isUser ? <User className="h-4 w-4" /> : isError ? <AlertCircle className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                    {isUser ? <User className="h-3.5 w-3.5" /> : isError ? <AlertCircle className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
                   </div>
 
                   {/* Bubble Container */}
-                  <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
+                  <div className={`flex flex-col max-w-[88%] sm:max-w-[78%] ${isUser ? 'items-end' : 'items-start'}`}>
                     <div
-                      className={`relative rounded-2xl px-4 py-3 text-xs leading-relaxed shadow-xs ${
+                      className={`relative rounded-2xl px-4 py-3 text-xs leading-relaxed ${
                         isUser
-                          ? 'bg-indigo-600 text-white rounded-tr-xs'
+                          ? 'bg-slate-900 text-white rounded-tr-xs shadow-xs'
                           : isError
                           ? 'bg-rose-50 text-rose-900 border border-rose-200 rounded-tl-xs'
-                          : 'bg-white text-slate-800 border border-slate-200 rounded-tl-xs'
+                          : 'bg-white text-slate-800 border border-slate-200 rounded-tl-xs shadow-xs'
                       }`}
                     >
                       {/* Markdown Text */}
-                      <div className="prose prose-xs max-w-none text-inherit prose-headings:font-bold prose-headings:text-inherit prose-p:my-1 prose-pre:bg-slate-900 prose-pre:text-slate-100">
+                      <div className="prose prose-xs max-w-none text-inherit prose-headings:font-semibold prose-headings:text-inherit prose-p:my-1 prose-pre:bg-slate-900 prose-pre:text-slate-100">
                         <Markdown>{msg.text}</Markdown>
                       </div>
 
                       {/* Message Actions */}
                       <div
                         className={`mt-2 flex items-center justify-between gap-3 text-[10px] ${
-                          isUser ? 'text-indigo-200' : 'text-slate-400'
+                          isUser ? 'text-slate-400' : 'text-slate-400'
                         }`}
                       >
                         <span>{msg.timestamp}</span>
                         {!isUser && (
                           <button
                             onClick={() => handleCopyMessage(msg)}
-                            className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 hover:text-indigo-600"
+                            className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 hover:text-slate-900"
                             title="Yanıtı Kopyala"
                           >
                             {copiedMsgId === msg.id ? (
@@ -307,27 +304,27 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       </div>
                     </div>
 
-                    {/* Sources (Citations) Section */}
+                    {/* Sources Section */}
                     {hasSources && (
                       <div className="mt-2 w-full">
                         <button
                           type="button"
                           onClick={() => toggleSources(msg.id)}
-                          className="flex items-center gap-1.5 rounded-lg bg-indigo-50/80 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition"
+                          className="flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 border border-slate-200 hover:bg-slate-100 transition shadow-2xs"
                         >
-                          <BookOpen className="h-3 w-3" />
-                          <span>Kaynak Parçalar ({msg.sources?.length})</span>
+                          <BookOpen className="h-3 w-3 text-slate-500" />
+                          <span>Kaynak Referansları ({msg.sources?.length})</span>
                           {isSourcesOpen ? (
-                            <ChevronUp className="h-3 w-3 ml-0.5" />
+                            <ChevronUp className="h-3 w-3 ml-0.5 text-slate-400" />
                           ) : (
-                            <ChevronDown className="h-3 w-3 ml-0.5" />
+                            <ChevronDown className="h-3 w-3 ml-0.5 text-slate-400" />
                           )}
                         </button>
 
                         {isSourcesOpen && (
-                          <div className="mt-2 space-y-2 rounded-xl border border-indigo-100 bg-indigo-50/30 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-900">
-                              RAG Kaynak Alıntıları (Backend'den Dönen Parçalar)
+                          <div className="mt-2 space-y-2 rounded-xl border border-slate-200 bg-slate-100/70 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                              Dokümandan Alıntılanan Kaynak Parçalar
                             </p>
                             {msg.sources?.map((source, sIdx) => {
                               const snippet =
@@ -335,20 +332,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               return (
                                 <div
                                   key={sIdx}
-                                  className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] shadow-xs"
+                                  className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] shadow-2xs"
                                 >
                                   <div className="flex items-center justify-between text-[10px] font-medium text-slate-500 mb-1">
-                                    <span className="font-semibold text-indigo-700">
+                                    <span className="font-semibold text-slate-900">
                                       Kaynak #{sIdx + 1}
                                       {source.chunk_index !== undefined ? ` (Parça ${source.chunk_index})` : ''}
                                     </span>
                                     {source.page !== undefined && (
                                       <span>Sayfa: {source.page}</span>
-                                    )}
-                                    {source.score !== undefined && (
-                                      <span className="font-mono text-emerald-600">
-                                        Benzerlik: {Number(source.score).toFixed(3)}
-                                      </span>
                                     )}
                                   </div>
                                   <p className="text-slate-700 whitespace-pre-wrap leading-normal font-sans bg-slate-50 p-2 rounded border border-slate-100">
@@ -366,15 +358,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               );
             })}
 
-            {/* Loading animation */}
+            {/* Loading state */}
             {isLoading && (
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
-                  <Bot className="h-4 w-4" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-white shadow-2xs">
+                  <Bot className="h-3.5 w-3.5" />
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-xs">
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin text-indigo-600" />
-                  <span>Dokümanda taranıyor ve yanıt üretiliyor...</span>
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-600 shadow-xs">
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin text-slate-800" />
+                  <span>Belge taranıyor ve yanıt hazırlanıyor...</span>
                 </div>
               </div>
             )}
@@ -384,11 +376,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </div>
 
-      {/* Suggested Prompts (if chat is fresh) */}
+      {/* Suggested Questions */}
       {selectedDoc && messages.length <= 1 && (
         <div className="border-t border-slate-100 bg-white px-4 py-2">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-amber-500" /> Hızlı Soru Önerileri
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            Örnek Sorular
           </p>
           <div className="flex flex-wrap gap-1.5">
             {samplePrompts.map((prompt, idx) => (
@@ -396,7 +388,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 key={idx}
                 onClick={() => handleSendMessage(prompt)}
                 disabled={isLoading}
-                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition text-left"
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition text-left"
               >
                 {prompt}
               </button>
@@ -407,7 +399,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Input Area */}
       <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
-        <div className="relative flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+        <div className="relative flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-xs focus-within:border-slate-600 focus-within:ring-1 focus-within:ring-slate-600">
           <textarea
             ref={textareaRef}
             id="input-chat-question"
@@ -418,8 +410,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             disabled={!selectedDoc || isLoading}
             placeholder={
               !selectedDoc
-                ? 'Lütfen önce bir PDF dokümanı seçin...'
-                : 'Doküman hakkında soru sorun (Enter ile gönder)...'
+                ? 'Lütfen önce bir belge seçin...'
+                : 'Belge hakkında soru sorun (Enter ile gönder)...'
             }
             className="flex-1 max-h-32 min-h-[38px] resize-none border-0 bg-transparent px-3 py-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0 disabled:opacity-50"
           />
@@ -428,7 +420,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             type="button"
             onClick={() => handleSendMessage()}
             disabled={!inputQuestion.trim() || !selectedDoc || isLoading}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition disabled:opacity-40"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs hover:bg-slate-800 active:bg-black transition disabled:opacity-30"
             title="Gönder"
           >
             <Send className="h-4 w-4" />
@@ -438,8 +430,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400 px-1">
           <span>Shift + Enter: Yeni satır • Enter: Gönder</span>
           {selectedDoc && (
-            <span className="text-slate-500 font-medium">
-              Aktif Doküman: <b>{selectedDoc.filename}</b>
+            <span className="text-slate-600 font-medium truncate max-w-[200px]">
+              {selectedDoc.filename}
             </span>
           )}
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, RefreshCw, Layers, MessageSquare, Search, AlertCircle, CheckCircle2, Clock, FileQuestion, ChevronRight } from 'lucide-react';
+import { FileText, RefreshCw, Layers, MessageSquare, Search, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { DocumentItem } from '../types';
 
 interface DocumentListProps {
@@ -20,8 +20,6 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   onSelectDoc,
   onViewChunks,
   onRefresh,
-  onRequireAuth,
-  isAuthenticated,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -33,7 +31,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     const s = (status || '').toLowerCase();
     if (s === 'completed' || s === 'chunked' || s === 'ready' || s === 'processed') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 border border-emerald-200">
           <CheckCircle2 className="h-3 w-3" />
           Hazır
         </span>
@@ -41,7 +39,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     }
     if (s === 'processing' || s === 'pending') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">
+        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-200">
           <Clock className="h-3 w-3 animate-spin" />
           İşleniyor
         </span>
@@ -49,36 +47,36 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     }
     if (s === 'failed' || s === 'error') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-200">
+        <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700 border border-rose-200">
           <AlertCircle className="h-3 w-3" />
           Hata
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
         {status || 'Yüklendi'}
       </span>
     );
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
             <FileText className="h-4 w-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-900">Yüklenen Dokümanlar</h3>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+              <h3 className="text-sm font-bold text-slate-900">Belgelerim</h3>
+              <span className="rounded-full bg-slate-100 px-2 py-0.2 text-xs font-semibold text-slate-600">
                 {documents.length}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500">
-              FastAPI <code className="bg-slate-100 px-1 py-0.2 rounded font-mono">/documents/</code> listesi
+            <p className="text-xs text-slate-500">
+              Analiz edilebilir dokümanlar
             </p>
           </div>
         </div>
@@ -88,10 +86,10 @@ export const DocumentList: React.FC<DocumentListProps> = ({
           type="button"
           onClick={onRefresh}
           disabled={isLoading}
-          title="Doküman listesini yenile"
-          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition disabled:opacity-50"
+          title="Listeyi yenile"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin text-indigo-600' : 'text-slate-500'}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin text-slate-900' : 'text-slate-500'}`} />
           <span className="hidden sm:inline">Yenile</span>
         </button>
       </div>
@@ -105,55 +103,41 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Doküman adı ile filtrele..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            placeholder="Belge adı ile ara..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           />
         </div>
       )}
 
       {/* Documents List */}
-      {!isAuthenticated ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-          <FileQuestion className="mx-auto h-8 w-8 text-slate-400 mb-2" />
-          <p className="text-xs font-semibold text-slate-700">Dokümanları Görmek İçin Giriş Yapın</p>
-          <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">
-            Backend doküman listesi için Authorization Bearer token gereklidir.
-          </p>
-          <button
-            onClick={onRequireAuth}
-            className="mt-3 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
-          >
-            Giriş Yap
-          </button>
-        </div>
-      ) : isLoading && documents.length === 0 ? (
+      {isLoading && documents.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400">
-          <RefreshCw className="h-6 w-6 animate-spin text-indigo-600 mb-2" />
-          <p className="text-xs font-medium text-slate-600">Dokümanlar yükleniyor...</p>
+          <RefreshCw className="h-5 w-5 animate-spin text-slate-700 mb-2" />
+          <p className="text-xs text-slate-600">Belgeler yükleniyor...</p>
         </div>
       ) : filteredDocs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-          <FileText className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+          <FileText className="mx-auto h-7 w-7 text-slate-400 mb-2" />
           <p className="text-xs font-semibold text-slate-700">
-            {searchQuery ? 'Aramanıza uygun doküman bulunamadı' : 'Henüz yüklenmiş doküman yok'}
+            {searchQuery ? 'Aramanıza uygun belge bulunamadı' : 'Henüz yüklenmiş belge yok'}
           </p>
           <p className="text-[11px] text-slate-500 mt-1">
             {searchQuery
               ? 'Farklı bir arama terimi deneyin.'
-              : 'Yukarıdaki alandan ilk PDF dokümanınızı yükleyerek başlayın.'}
+              : 'Yukarıdaki alandan PDF yükleyerek analize başlayabilirsiniz.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-2 max-h-[420px] overflow-y-auto pr-0.5">
+        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-0.5">
           {filteredDocs.map((doc) => {
             const isSelected = selectedDoc?.id === doc.id;
             return (
               <div
                 key={String(doc.id)}
-                className={`group rounded-xl border p-3 transition ${
+                className={`rounded-xl border p-3 transition ${
                   isSelected
-                    ? 'border-indigo-500 bg-indigo-50/40 ring-2 ring-indigo-200/60'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                    ? 'border-slate-800 bg-slate-50/90 shadow-xs ring-1 ring-slate-800'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -162,13 +146,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                     className="flex-1 min-w-0 cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-600 font-bold text-[10px]">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white font-semibold text-[10px]">
                         PDF
                       </div>
                       <p
-                        className={`text-xs font-semibold truncate ${
-                          isSelected ? 'text-indigo-950' : 'text-slate-900'
-                        }`}
+                        className="text-xs font-semibold text-slate-900 truncate"
                         title={doc.filename}
                       >
                         {doc.filename}
@@ -179,15 +161,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                       {getStatusBadge(doc.status)}
 
                       {doc.chunk_count !== undefined && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 border border-indigo-100">
-                          <Layers className="h-3 w-3" />
+                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 border border-slate-200">
+                          <Layers className="h-3 w-3 text-slate-500" />
                           {doc.chunk_count} parça
                         </span>
                       )}
-
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        ID: {doc.id}
-                      </span>
                     </div>
                   </div>
 
@@ -199,23 +177,23 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                       onClick={() => onSelectDoc(doc)}
                       className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                         isSelected
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'border border-slate-200 bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                       }`}
                     >
                       <MessageSquare className="h-3 w-3" />
-                      <span>{isSelected ? 'Seçildi' : 'Sohbet Et'}</span>
+                      <span>{isSelected ? 'Seçildi' : 'Soru Sor'}</span>
                     </button>
 
                     <button
                       id={`btn-chunks-doc-${doc.id}`}
                       type="button"
                       onClick={() => onViewChunks(doc)}
-                      className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-indigo-600 transition"
-                      title="Parçaları (chunks) görüntüle"
+                      className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-900 transition"
+                      title="Parçaları incele"
                     >
                       <Layers className="h-3 w-3" />
-                      <span>Parçaları Gör</span>
+                      <span>Parçalar</span>
                     </button>
                   </div>
                 </div>
