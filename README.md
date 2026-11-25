@@ -3,7 +3,7 @@
 RAG (Retrieval-Augmented Generation) tabanlı doküman soru-cevap platformu. Kullanıcı bir PDF yükler, sistem içeriği parçalayıp vektörleştirir, ardından kullanıcı doküman üzerinde soru sorup kaynak gösterimli cevap alabilir.
 
 
-## Teknoloji Yığını
+## Teknoloji Yığını(Tech Stack)
 
 **Backend**
 - Python + FastAPI
@@ -15,7 +15,7 @@ RAG (Retrieval-Augmented Generation) tabanlı doküman soru-cevap platformu. Kul
 - Google Gemini API (cevap üretimi, ücretsiz kota)
 
 **Frontend**
-- React + Vite (TypeScript)
+- React + Vite (TypeScript)(With Google AI Studıo)
 
 ## Kurulum
 
